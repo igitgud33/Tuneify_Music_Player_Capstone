@@ -33,10 +33,11 @@ class MediaPlayerPresenter(
     3. In val songUri, change "song_name" to the name sa mp3 file
     Optional: input name title and artist in view.updateSongInfo()
     4. Remove comment symbols and try running DashboardActivity
+    */
 
     init {
         // get song path file from raw package
-        val songUri = "android.resource://com.example.musicplayer/raw/song_name"
+        val songUri = "android.resource://com.example.musicplayer/raw/pink_room"
         musicService.playSong(songUri)
 
         view.setPlayPauseIcon(musicService.isPlaying())
@@ -48,7 +49,7 @@ class MediaPlayerPresenter(
         // run handler
         handler.post(updateProgressRunnable)
     }
-    */
+
 
     // play/pause logic
     override fun onPlayPauseClick() {
