@@ -34,10 +34,10 @@ class AlbumModel(context: Context): AlbumContract.Model {
     ) {
         CoroutineScope(Dispatchers.IO).launch {
             try {
-                val id = albumDao.insertAlbum(album)
-                // switch back to Main thread to send result to Presenter
+                albumDao.insertAlbum(album)
+                val updatedAlbums = albumDao.getAllAlbums() // fetch fresh list
                 withContext(Dispatchers.Main) {
-                    callback(id, null)
+                    callback(updatedAlbums, null)  // now types match
                 }
             } catch (e: Exception) {
                 withContext(Dispatchers.Main) {

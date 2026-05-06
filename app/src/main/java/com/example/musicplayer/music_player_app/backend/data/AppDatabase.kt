@@ -6,7 +6,8 @@ import androidx.room.Room
 import androidx.room.RoomDatabase
 import com.example.musicplayer.music_player_app.frontend.screens.playlist.Song
 
-@Database(entities = [Song::class], version = 1, exportSchema = false)
+
+@Database(entities = [Song::class, Album::class], version = 1, exportSchema = false)
 abstract class AppDatabase : RoomDatabase() {
     abstract fun songDao(): SongDao
     abstract fun albumDao(): AlbumDao
