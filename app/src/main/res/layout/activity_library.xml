@@ -31,4 +31,31 @@
         app:layout_constraintTop_toTopOf="parent"
         tools:listitem="@layout/item_playlist_placeholder" />
 
+    <com.google.android.material.floatingactionbutton.FloatingActionButton
+        android:id="@+id/fabAddPlaylist"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_margin="24dp"
+        android:src="@drawable/ic_add"
+        app:tint="@android:color/white"
+        app:backgroundTint="#8A65D6"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        android:contentDescription="Add Playlist" />
+
+    <com.google.android.material.floatingactionbutton.FloatingActionButton
+        android:id="@+id/fabDeletePlaylists"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_margin="24dp"
+        android:src="@android:drawable/ic_menu_delete"
+        android:visibility="gone"
+        app:tint="@android:color/white"
+        app:backgroundTint="#D32F2F"
+        app:layout_constraintBottom_toTopOf="@+id/fabAddPlaylist"
+        app:layout_constraintEnd_toEndOf="parent"
+        android:contentDescription="Delete Selected Playlists" />
+
+
+
 </androidx.constraintlayout.widget.ConstraintLayout>

@@ -14,9 +14,15 @@ interface SongDao {
     @Query("SELECT * FROM songs WHERE playlistId = :playlistId")
     suspend fun getSongsForPlaylist(playlistId: Int): List<Song>
 
+    @Query("SELECT COUNT(*) FROM songs WHERE playlistId = :playlistId")
+    suspend fun getSongCountForPlaylist(playlistId: Int): Int
+
+    @Query("SELECT * FROM songs WHERE fileUri = :uri AND playlistId = :playlistId LIMIT 1")
+    suspend fun getSongByUriAndPlaylist(uri: String, playlistId: Int): Song?
+
     @Insert
     suspend fun insertSong(song: Song)
 
     @Delete
-    suspend fun deleteSong(song: Song)
+    suspend fun deleteSongs(songs: List<Song>)
 }

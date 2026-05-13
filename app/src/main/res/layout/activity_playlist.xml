@@ -32,4 +32,31 @@
         app:layout_constraintTop_toTopOf="parent"
         tools:listitem="@layout/item_song_placeholder" />
 
+    <com.google.android.material.floatingactionbutton.FloatingActionButton
+        android:id="@+id/fabAddSong"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_margin="24dp"
+        android:src="@drawable/ic_add"
+        app:tint="@android:color/white"
+        app:backgroundTint="#8A65D6"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        android:contentDescription="Add Song" />
+
+    <com.google.android.material.floatingactionbutton.FloatingActionButton
+        android:id="@+id/fabDeleteSongs"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_margin="24dp"
+        android:src="@android:drawable/ic_menu_delete"
+        android:visibility="gone"
+        app:tint="@android:color/white"
+        app:backgroundTint="#D32F2F"
+        app:layout_constraintBottom_toTopOf="@+id/fabAddSong"
+        app:layout_constraintEnd_toEndOf="parent"
+        android:contentDescription="Delete Selected Songs" />
+
+
+
 </androidx.constraintlayout.widget.ConstraintLayout>

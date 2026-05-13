@@ -1,77 +1,94 @@
 package com.example.musicplayer.music_player_app.frontend.screens.mediaplayer
 
-
 import android.os.Handler
 import android.os.Looper
+import com.example.musicplayer.music_player_app.backend.data.Playlist
 import com.example.musicplayer.music_player_app.backend.service.MusicService
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.launch
 
 class MediaPlayerPresenter(
-    private var view: MediaPlayerContract.View,
-    private var musicService: MusicService,
-
-
+    private var view: MediaPlayerContract.View?,
+    private val musicService: MusicService,
+    private val model: MediaPlayerContract.Model
 ) : MediaPlayerContract.Presenter {
 
-    // helps run code repeatedly and display progress bar UI
+    private val job = Job()
+    private val scope = CoroutineScope(Dispatchers.Main + job)
+
     private val handler = Handler(Looper.getMainLooper())
     private val updateProgressRunnable = object: Runnable {
         override fun run() {
             val current = musicService.getCurrentPosition()
             val total = musicService.getDuration()
+            view?.updateProgress(current, total)
 
-            view.updateProgress(current, total)
+            val currentSong = musicService.getCurrentSong()
+            if (currentSong != null) {
+                view?.updateSongInfo(currentSong.title, currentSong.artist)
+            }
 
-            // update per 1 sec
+            view?.setPlayPauseIcon(musicService.isPlaying())
             handler.postDelayed(this, 1000)
         }
     }
 
-    /*
-    INSTRUCTIONS:
-    1. Download mp3 and rename following this format: "song_name"
-    2. Paste in "raw" package (below mipmap)
-    3. In val songUri, change "song_name" to the name sa mp3 file
-    Optional: input name title and artist in view.updateSongInfo()
-    4. Remove comment symbols and try running DashboardActivity
-    */
-
     init {
-        // get song path file from raw package
-        val songUri = "android.resource://com.example.musicplayer/raw/pink_room"
-        musicService.playSong(songUri)
-
-        view.setPlayPauseIcon(musicService.isPlaying())
-
-        // update UI based on song
-        view.updateSongInfo("Title", "Artist")
-        view.setPlayPauseIcon(true)
-
-        // run handler
         handler.post(updateProgressRunnable)
+        loadInitialData()
     }
 
+    private fun loadInitialData() {
+        model.fetchPlaylists { playlists, error ->
+            if (error != null) {
+                // Handle error
+            } else if (playlists != null && playlists.isNotEmpty()) {
+                // view?.showPlaylistSelection(playlists)
+            }
+        }
+    }
 
-    // play/pause logic
     override fun onPlayPauseClick() {
         musicService.pauseResume()
-
-        // flip icon
-        view.setPlayPauseIcon(musicService.isPlaying())
+        view?.setPlayPauseIcon(musicService.isPlaying())
     }
 
-    // navigation (to be filled out later: main focus is being able to play a song)
-    override fun onPreviousClick() {}
-    override fun onNextClick() {}
+    override fun onPreviousClick() {
+        musicService.playPrevious()
+    }
 
-    // calls service (fun to be implemented later)
+    override fun onNextClick() {
+        musicService.playNext()
+    }
+
+    override fun onShuffleClick() {
+        musicService.toggleShuffle()
+        view?.setShuffleIcon(musicService.isShuffleEnabled())
+    }
+
+    override fun onAddSongToPlaylistClick() {
+        view?.showAddSongDialog()
+    }
+
+    override fun onPlaylistSelected(playlist: Playlist) {
+        model.fetchSongsForPlaylist(playlist.id) { songs, error ->
+            if (error != null) {
+                // Handle error
+            } else if (songs != null && songs.isNotEmpty()) {
+                musicService.setPlaylist(songs, 0)
+            }
+        }
+    }
+
     override fun seekTo(position: Int) {
         musicService.seekTo(position)
     }
 
     override fun onDestroy() {
-        // stop handler
         handler.removeCallbacks(updateProgressRunnable)
+        job.cancel()
+        view = null
     }
-
-
 }
