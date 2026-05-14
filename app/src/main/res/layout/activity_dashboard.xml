@@ -5,7 +5,7 @@
     android:id="@+id/main"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#121212"
+    android:background="@drawable/background_app1"
     android:orientation="vertical"
     android:padding="24dp"
     tools:context="com.example.musicplayer.music_player_app.frontend.screens.dashboard.DashboardActivity">
