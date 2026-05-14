@@ -121,7 +121,8 @@
             android:layout_height="48dp"
             android:background="?attr/selectableItemBackgroundBorderless"
             android:contentDescription="Shuffle"
-            android:src="@drawable/baseline_shuffle_24" />
+            android:src="@drawable/baseline_shuffle_24"
+            android:layout_marginLeft="-13dp"/>
 
         <Space
             android:layout_width="0dp"
@@ -163,6 +164,7 @@
             android:layout_width="48dp"
             android:layout_height="48dp"
             android:visibility="invisible" />
+
 
     </LinearLayout>
 
