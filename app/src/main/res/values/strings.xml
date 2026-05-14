@@ -1,3 +1,4 @@
 <resources>
     <string name="app_name">MusicPlayer</string>
+    <string name="playlist_cover_description">Playlist Cover Image</string>
 </resources>
