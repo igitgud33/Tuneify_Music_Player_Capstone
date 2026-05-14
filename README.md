@@ -18,3 +18,7 @@ added the Logo_app.png on activity_login.xml and remade the activity_register.xm
 fixed other xml layouts
 
 added background_app1.jpg for the dashboard
+
+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+add all the background on each of the layouts 
