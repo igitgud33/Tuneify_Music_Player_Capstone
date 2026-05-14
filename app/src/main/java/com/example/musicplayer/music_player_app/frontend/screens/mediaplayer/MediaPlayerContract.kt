@@ -10,7 +10,7 @@ class MediaPlayerContract {
         fun setPlayPauseIcon(isPlaying: Boolean)
         fun updateProgress(currentMinSec: Int, durationMinSec: Int)
         fun showPlaylistSelection(playlists: List<Playlist>)
-        fun setShuffleIcon(isShuffle: Boolean)
+        fun updatePlaybackMode(mode: com.example.musicplayer.music_player_app.backend.service.MusicService.PlaybackMode)
         fun showAddSongDialog()
     }
 

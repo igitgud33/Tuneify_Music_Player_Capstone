@@ -64,8 +64,8 @@ class MediaPlayerPresenter(
     }
 
     override fun onShuffleClick() {
-        musicService.toggleShuffle()
-        view?.setShuffleIcon(musicService.isShuffleEnabled())
+        musicService.cyclePlaybackMode()
+        view?.updatePlaybackMode(musicService.getPlaybackMode())
     }
 
     override fun onAddSongToPlaylistClick() {

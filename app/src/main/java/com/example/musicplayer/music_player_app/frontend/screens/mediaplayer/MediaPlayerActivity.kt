@@ -10,6 +10,7 @@ import android.widget.ImageButton
 import android.widget.PopupMenu
 import android.widget.SeekBar
 import android.widget.TextView
+import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import com.example.musicplayer.R
@@ -132,9 +133,23 @@ class MediaPlayerActivity: AppCompatActivity(), MediaPlayerContract.View {
 
     override fun showPlaylistSelection(playlists: List<Playlist>) {}
 
-    override fun setShuffleIcon(isShuffle: Boolean) {
+    override fun updatePlaybackMode(mode: MusicService.PlaybackMode) {
         val btn = findViewById<ImageButton>(R.id.btnShuffle)
-        btn.alpha = if (isShuffle) 1.0f else 0.5f
+        val message = when (mode) {
+            MusicService.PlaybackMode.NORMAL -> {
+                btn.alpha = 0.5f
+                "Mode: Normal"
+            }
+            MusicService.PlaybackMode.SHUFFLE -> {
+                btn.alpha = 1.0f
+                "Mode: Shuffle"
+            }
+            MusicService.PlaybackMode.RANDOM -> {
+                btn.alpha = 1.0f
+                "Mode: Random"
+            }
+        }
+        Toast.makeText(this, message, Toast.LENGTH_SHORT).show()
     }
 
     override fun updateSongInfo(title: String, artist: String) {

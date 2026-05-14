@@ -19,13 +19,18 @@ import com.example.musicplayer.music_player_app.frontend.screens.playlist.Song
 
 class MusicService : Service() {
     private var mediaPlayer: MediaPlayer? = null
+    enum class PlaybackMode {
+        NORMAL,  // Sequential
+        SHUFFLE, // Random order, all played once
+        RANDOM   // Truly random selection next
+    }
+
+    private var currentMode = PlaybackMode.NORMAL
     private var songList: List<Song> = emptyList()
-    
+
     // Tracks the order of playback (indices into songList)
     private var playbackOrder: List<Int> = emptyList()
     private var currentOrderIndex = -1
-    
-    private var isShuffle = false
 
     private val CHANNEL_ID = "MusicServiceChannel"
     private val NOTIFICATION_ID = 1
@@ -85,15 +90,22 @@ class MusicService : Service() {
             return
         }
 
-        if (isShuffle) {
-            val indices = songList.indices.toMutableList()
-            indices.remove(startIndex)
-            indices.shuffle()
-            playbackOrder = listOf(startIndex) + indices
-            currentOrderIndex = 0
-        } else {
-            playbackOrder = songList.indices.toList()
-            currentOrderIndex = startIndex
+        when (currentMode) {
+            PlaybackMode.SHUFFLE -> {
+                val indices = songList.indices.toMutableList()
+                indices.remove(startIndex)
+                indices.shuffle()
+                playbackOrder = listOf(startIndex) + indices
+                currentOrderIndex = 0
+            }
+            PlaybackMode.RANDOM -> {
+                playbackOrder = listOf(startIndex)
+                currentOrderIndex = 0
+            }
+            PlaybackMode.NORMAL -> {
+                playbackOrder = songList.indices.toList()
+                currentOrderIndex = startIndex
+            }
         }
 
         playCurrent()
@@ -159,8 +171,16 @@ class MusicService : Service() {
     }
 
     fun playNext() {
-        if (playbackOrder.isEmpty()) return
-        currentOrderIndex = (currentOrderIndex + 1) % playbackOrder.size
+        if (songList.isEmpty()) return
+
+        if (currentMode == PlaybackMode.RANDOM) {
+            val nextIndex = songList.indices.random()
+            playbackOrder = playbackOrder + nextIndex
+            currentOrderIndex = playbackOrder.size - 1
+        } else {
+            if (playbackOrder.isEmpty()) return
+            currentOrderIndex = (currentOrderIndex + 1) % playbackOrder.size
+        }
         playCurrent()
     }
 
@@ -173,37 +193,64 @@ class MusicService : Service() {
             return
         }
 
-        currentOrderIndex = if (currentOrderIndex <= 0) playbackOrder.size - 1 else currentOrderIndex - 1
+        if (currentMode == PlaybackMode.RANDOM) {
+            if (currentOrderIndex > 0) {
+                currentOrderIndex--
+            } else {
+                // Already at the start of history in random mode, just stay or play a new random
+                seekTo(0)
+                return
+            }
+        } else {
+            currentOrderIndex = if (currentOrderIndex <= 0) playbackOrder.size - 1 else currentOrderIndex - 1
+        }
         playCurrent()
     }
 
-    fun toggleShuffle() {
-        isShuffle = !isShuffle
+    fun cyclePlaybackMode() {
+        currentMode = when (currentMode) {
+            PlaybackMode.NORMAL -> PlaybackMode.SHUFFLE
+            PlaybackMode.SHUFFLE -> PlaybackMode.RANDOM
+            PlaybackMode.RANDOM -> PlaybackMode.NORMAL
+        }
+
         if (songList.isEmpty()) return
 
         val currentSongIndex = if (currentOrderIndex in playbackOrder.indices) playbackOrder[currentOrderIndex] else -1
 
-        if (isShuffle) {
-            // Enable shuffle: current song stays at the front
-            val indices = songList.indices.toMutableList()
-            if (currentSongIndex != -1) {
-                indices.remove(currentSongIndex)
-                indices.shuffle()
-                playbackOrder = listOf(currentSongIndex) + indices
-                currentOrderIndex = 0
-            } else {
-                indices.shuffle()
-                playbackOrder = indices
-                currentOrderIndex = 0
+        when (currentMode) {
+            PlaybackMode.SHUFFLE -> {
+                val indices = songList.indices.toMutableList()
+                if (currentSongIndex != -1) {
+                    indices.remove(currentSongIndex)
+                    indices.shuffle()
+                    playbackOrder = listOf(currentSongIndex) + indices
+                    currentOrderIndex = 0
+                } else {
+                    indices.shuffle()
+                    playbackOrder = indices
+                    currentOrderIndex = 0
+                }
             }
-        } else {
-            // Disable shuffle: return to normal order
-            playbackOrder = songList.indices.toList()
-            currentOrderIndex = if (currentSongIndex != -1) currentSongIndex else 0
+            PlaybackMode.RANDOM -> {
+                if (currentSongIndex != -1) {
+                    playbackOrder = listOf(currentSongIndex)
+                    currentOrderIndex = 0
+                } else {
+                    val nextIndex = songList.indices.random()
+                    playbackOrder = listOf(nextIndex)
+                    currentOrderIndex = 0
+                    playCurrent()
+                }
+            }
+            PlaybackMode.NORMAL -> {
+                playbackOrder = songList.indices.toList()
+                currentOrderIndex = if (currentSongIndex != -1) currentSongIndex else 0
+            }
         }
     }
 
-    fun isShuffleEnabled() = isShuffle
+    fun getPlaybackMode() = currentMode
 
     fun getCurrentSong(): Song? {
         val songIndex = if (currentOrderIndex in playbackOrder.indices) playbackOrder[currentOrderIndex] else -1
