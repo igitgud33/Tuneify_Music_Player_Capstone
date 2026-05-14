@@ -5,7 +5,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#121212"
+    android:background="@drawable/background_app1"
     android:fitsSystemWindows="true"
     tools:context="com.example.musicplayer.music_player_app.frontend.screens.library.LibraryActivity">
 
