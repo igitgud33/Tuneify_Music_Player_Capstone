@@ -10,3 +10,11 @@ polished the Login layout
 reform the activity_register.xml, dialog_import_album.xml, 
 
 redesign the deploymentTargetSelector.xml, 
+
+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+added the Logo_app.png on activity_login.xml and remade the activity_register.xml adding a background_app.jpg
+
+fixed other xml layouts
+
+added background_app1.jpg for the dashboard
