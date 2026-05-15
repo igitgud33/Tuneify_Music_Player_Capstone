@@ -25,7 +25,7 @@ class MusicService : Service() {
     enum class PlaybackMode {
         NORMAL,  // Sequential
         SHUFFLE, // Random order, all played once
-        RANDOM   // Truly random selection next
+        LOOP   // loop between songs
     }
 
     private var currentMode = PlaybackMode.NORMAL
@@ -52,11 +52,21 @@ class MusicService : Service() {
     override fun onBind(intent: Intent): IBinder = binder
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
-        if (intent?.action == "STOP_SERVICE") {
-            stopMusic()
-            stopSelf()
-            return START_NOT_STICKY
+        // reformatted condition to add PAUSE_MUSIC for logout instance
+        when(intent?.action) {
+            "STOP_SERVICE" -> {
+                stopMusic()
+                stopSelf()
+                return START_NOT_STICKY
+            }
+            "PAUSE_MUSIC" -> {
+                pauseMusic()
+                stopForeground(false) // allows notif to be dismissable
+                return START_NOT_STICKY
+            }
         }
+
+
         val currentSong = getCurrentSong()
         val notification = createNotification(currentSong?.title ?: "Ready to play", isPlaying())
         startForeground(NOTIFICATION_ID, notification)
@@ -108,21 +118,6 @@ class MusicService : Service() {
 
         // Always update the song list first
         songList = songs
-
-        when (currentMode) {
-            PlaybackMode.SHUFFLE -> {
-                val indices = songList.indices.toMutableList()
-                indices.removeAt(startIndex) // Remove the specific index we want to start with
-                indices.shuffle()
-                playbackOrder = listOf(startIndex) + indices
-                currentOrderIndex = 0
-            }
-            else -> {
-                // NORMAL and RANDOM (Random picks a new index on Next anyway)
-                playbackOrder = songList.indices.toList()
-                currentOrderIndex = startIndex
-            }
-        }
 
         playCurrent(forceRestart = true)
     }
@@ -229,14 +224,14 @@ class MusicService : Service() {
     fun playNext() {
         if (songList.isEmpty() || playbackOrder.isEmpty()) return
 
-        if (currentMode == PlaybackMode.RANDOM) {
-            // Pick a completely random song from the list
-            currentOrderIndex = (0 until playbackOrder.size).random()
+        if (currentMode == PlaybackMode.LOOP) {
+            // stay on current index to repeat song
+            Log.d("MusicService", "Loop: Staying in Index=$currentOrderIndex")
         } else {
-            // Move to next in the current order (Normal or Shuffle)
+            // otherwise, move
             currentOrderIndex = (currentOrderIndex + 1) % playbackOrder.size
         }
-        
+
         Log.d("MusicService", "Navigating Next: New Index=$currentOrderIndex")
         playCurrent(forceRestart = true)
     }
@@ -245,19 +240,14 @@ class MusicService : Service() {
         if (songList.isEmpty() || playbackOrder.isEmpty()) return
         
         // If song is more than 3 seconds in, restart the current song
-        if (getCurrentPosition() > 3000) {
+        if (getCurrentPosition() > 3000 || currentMode == PlaybackMode.LOOP) {
             seekTo(0)
             return
         }
 
-        if (currentMode == PlaybackMode.RANDOM) {
-            // In random mode, "back" just picks another random song
-            currentOrderIndex = (0 until playbackOrder.size).random()
-        } else {
-            // Move to previous in the current order (Normal or Shuffle)
-            currentOrderIndex = if (currentOrderIndex <= 0) playbackOrder.size - 1 else currentOrderIndex - 1
-        }
-        
+        currentOrderIndex = if (currentOrderIndex <= 0) playbackOrder.size - 1 else currentOrderIndex - 1
+
+
         Log.d("MusicService", "Navigating Back: New Index=$currentOrderIndex")
         playCurrent(forceRestart = true)
     }
@@ -265,23 +255,32 @@ class MusicService : Service() {
     fun cyclePlaybackMode() {
         currentMode = when (currentMode) {
             PlaybackMode.NORMAL -> PlaybackMode.SHUFFLE
-            PlaybackMode.SHUFFLE -> PlaybackMode.RANDOM
-            PlaybackMode.RANDOM -> PlaybackMode.NORMAL
+            PlaybackMode.SHUFFLE -> PlaybackMode.LOOP
+            PlaybackMode.LOOP -> PlaybackMode.NORMAL
         }
 
-        if (songList.isEmpty()) return
+        updatePlaybackLogic()
+    }
 
+    fun setPlayBackMode(mode: PlaybackMode) {
+        currentMode = mode
+        updatePlaybackLogic()
+    }
+
+    fun updatePlaybackLogic() {
+        if (songList.isEmpty()) return
         val currentSongUri = currentPlayingSong?.fileUri
 
         when (currentMode) {
             PlaybackMode.SHUFFLE -> {
                 val indices = songList.indices.toMutableList()
-                val currentIdxInRawList = songList.indexOfFirst { it.fileUri == currentSongUri }
-                
-                if (currentIdxInRawList != -1) {
-                    indices.remove(currentIdxInRawList)
+                val currentIndexInRawList = songList.indexOfFirst { it.fileUri == currentSongUri }
+
+                if (currentIndexInRawList != -1) {
+                    indices.remove(currentIndexInRawList)
                     indices.shuffle()
-                    playbackOrder = listOf(currentIdxInRawList) + indices
+                    // Keep the current song at the top of the shuffle order
+                    playbackOrder = listOf(currentIndexInRawList) + indices
                     currentOrderIndex = 0
                 } else {
                     indices.shuffle()
@@ -290,13 +289,15 @@ class MusicService : Service() {
                 }
             }
             else -> {
-                // NORMAL and RANDOM
+                // NORMAL and LOOP use sequential order
                 playbackOrder = songList.indices.toList()
-                val currentIdxInRawList = songList.indexOfFirst { it.fileUri == currentSongUri }
-                currentOrderIndex = if (currentIdxInRawList != -1) currentIdxInRawList else 0
+                val currentIndexInRawList = songList.indexOfFirst { it.fileUri == currentSongUri }
+
+                // set currentOrderIndex to  ACTUAL current song, not 0
+                currentOrderIndex = currentIndexInRawList
             }
         }
-        Log.d("MusicService", "Mode cycled to $currentMode. New order size: ${playbackOrder.size}")
+        Log.d("MusicService", "Mode set to $currentMode. Order size: ${playbackOrder.size}")
     }
 
     fun onSongDeleted(songUri: String) {

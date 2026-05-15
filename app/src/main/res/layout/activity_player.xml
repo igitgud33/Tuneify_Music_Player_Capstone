@@ -160,10 +160,15 @@
             android:layout_weight="1" />
 
 
-        <View
-            android:layout_width="48dp"
+        <ImageButton
+            android:id="@+id/btnLoop"
+            android:layout_width="80dp"
             android:layout_height="48dp"
-            android:visibility="invisible" />
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:contentDescription="Loop"
+            android:src="@drawable/baseline_loop_24"
+            android:layout_marginLeft="-23dp"
+            android:layout_marginRight="-23dp"/>
 
 
     </LinearLayout>

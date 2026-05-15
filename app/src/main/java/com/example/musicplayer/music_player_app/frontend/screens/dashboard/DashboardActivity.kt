@@ -2,6 +2,7 @@ package com.example.musicplayer.music_player_app.frontend.screens.dashboard
 
 import android.app.Activity
 import android.content.Intent
+import android.os.Build
 import android.os.Bundle
 import android.widget.Button
 import android.widget.TextView
@@ -41,9 +42,21 @@ class DashboardActivity : Activity(), DashboardContract.View {
 
         buttonBackToLogin.setOnClickListener {
             com.example.musicplayer.music_player_app.backend.data.SessionManager.logout(this)
-            // Removed STOP_SERVICE command to allow music to continue playing across login sessions
+
+            // Applied Pause intent so music pauses when user logs out instead of shutting down service entirely
+            val pauseIntent = Intent(this, com.example.musicplayer.music_player_app.backend.service.MusicService::class.java)
+            pauseIntent.action = "PAUSE_MUSIC"
+
+            // start w/ foreground action
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                startForegroundService(pauseIntent)
+            } else {
+                startService(pauseIntent)
+            }
 
             val backToLoginIntent = Intent(this, LoginActivity::class.java)
+            // ensures user is not sent back to dashboard
+            backToLoginIntent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
             startActivity(backToLoginIntent)
             finish()
         }
