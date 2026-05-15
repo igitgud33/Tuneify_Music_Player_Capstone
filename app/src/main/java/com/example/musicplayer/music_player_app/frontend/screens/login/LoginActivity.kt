@@ -21,6 +21,13 @@ class LoginActivity : Activity(), LoginContract.View {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        
+        // AUTO-LOGIN: Check if user is already logged in
+        if (com.example.musicplayer.music_player_app.backend.data.SessionManager.isLoggedIn()) {
+            showHome()
+            return
+        }
+
         setContentView(R.layout.activity_login)
 
         Presenter = LoginPresenter(this, LoginModel(this))

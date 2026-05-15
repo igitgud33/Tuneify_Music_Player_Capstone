@@ -67,7 +67,22 @@ class MediaPlayerActivity : AppCompatActivity(), MediaPlayerContract.View {
         val artist = intent.getStringExtra("SONG_ARTIST") ?: "Unknown Artist"
 
         if (uriString != null) {
-            presenter.loadAndPlay(uriString.toUri(), title, artist)
+            val currentSong = musicService?.getCurrentSong()
+            // Even if it's the same URI, we want to ensure the UI is fresh
+            // but we only trigger 'loadAndPlay' if the service isn't already playing it.
+            // NOTE: PlaylistActivity now calls setPlaylist before starting this activity.
+            if (currentSong?.fileUri != uriString) {
+                presenter.loadAndPlay(uriString.toUri(), title, artist)
+            } else {
+                updateSongInfo(currentSong.title, currentSong.artist)
+                setPlayPauseIcon(musicService?.isPlaying() ?: false)
+            }
+        } else {
+            // If no intent, just sync with current service state
+            musicService?.getCurrentSong()?.let {
+                updateSongInfo(it.title, it.artist)
+                setPlayPauseIcon(musicService?.isPlaying() ?: false)
+            }
         }
     }
 

@@ -12,6 +12,7 @@ interface PlaylistContract {
         fun updateSong(song: Song)
         fun removeSong(song: Song)
         fun updatePlaylistName(playlistId: Int, newName: String)
+        fun updatePlaylistCover(playlistId: Int, newCoverUri: String)
         fun onDestroy()
     }
 
@@ -21,5 +22,6 @@ interface PlaylistContract {
         suspend fun updateSong(song: Song)
         suspend fun deleteSong(song: Song)
         suspend fun updatePlaylistName(playlistId: Int, newName: String)
+        suspend fun updatePlaylistCover(playlistId: Int, newCoverUri: String)
     }
 }

@@ -24,7 +24,7 @@ class LoginModel(private val context: Context) {
                 }
                 
                 withContext(Dispatchers.Main) {
-                    SessionManager.login(user!!)
+                    SessionManager.login(context, user!!)
                     callback(true, user)
                 }
                 return@launch
@@ -35,7 +35,7 @@ class LoginModel(private val context: Context) {
             
             withContext(Dispatchers.Main) {
                 if (isValid) {
-                    SessionManager.login(user!!)
+                    SessionManager.login(context, user!!)
                 }
                 callback(isValid, user)
             }

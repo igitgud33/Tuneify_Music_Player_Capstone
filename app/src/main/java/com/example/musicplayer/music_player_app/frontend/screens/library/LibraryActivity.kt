@@ -75,10 +75,11 @@ class LibraryActivity : AppCompatActivity(), LibraryContract.View {
             onSelectionModeChanged = { isSelectionMode ->
                 fabDelete.visibility = if (isSelectionMode) View.VISIBLE else View.GONE
             },
-            onPlaylistClicked = { playlistId, playlistName ->
+            onPlaylistClicked = { playlistId: Int, playlistName: String, coverUri: String ->
                 val intent = Intent(this, PlaylistActivity::class.java).apply {
                     putExtra("PLAYLIST_ID", playlistId)
                     putExtra("PLAYLIST_NAME", playlistName)
+                    putExtra("PLAYLIST_COVER", coverUri)
                 }
                 startActivity(intent)
             }

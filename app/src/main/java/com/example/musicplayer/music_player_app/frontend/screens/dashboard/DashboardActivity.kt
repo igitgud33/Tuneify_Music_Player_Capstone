@@ -40,11 +40,8 @@ class DashboardActivity : Activity(), DashboardContract.View {
         }
 
         buttonBackToLogin.setOnClickListener {
-            com.example.musicplayer.music_player_app.backend.data.SessionManager.logout()
-            val stopIntent = Intent(this, com.example.musicplayer.music_player_app.backend.service.MusicService::class.java).apply {
-                action = "STOP_SERVICE"
-            }
-            startService(stopIntent)
+            com.example.musicplayer.music_player_app.backend.data.SessionManager.logout(this)
+            // Removed STOP_SERVICE command to allow music to continue playing across login sessions
 
             val backToLoginIntent = Intent(this, LoginActivity::class.java)
             startActivity(backToLoginIntent)

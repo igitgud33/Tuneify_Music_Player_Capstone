@@ -65,6 +65,16 @@ class PlaylistPresenter(
         }
     }
 
+    override fun updatePlaylistCover(playlistId: Int, newCoverUri: String) {
+        scope.launch {
+            try {
+                withContext(Dispatchers.IO) { model.updatePlaylistCover(playlistId, newCoverUri) }
+            } catch (e: Exception) {
+                view?.showError(e.message ?: "Error updating playlist cover")
+            }
+        }
+    }
+
     override fun onDestroy() {
         job.cancel()
         view = null

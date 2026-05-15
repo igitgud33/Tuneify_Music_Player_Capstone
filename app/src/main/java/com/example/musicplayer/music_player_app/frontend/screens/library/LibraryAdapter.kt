@@ -1,17 +1,20 @@
 package com.example.musicplayer.music_player_app.frontend.screens.library
 
 import android.graphics.Color
+import android.net.Uri
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.ImageView
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
+import coil.load
 import com.example.musicplayer.R
 
 class LibraryAdapter(
     private val playlists: List<PlaylistInfo>,
     private val onSelectionModeChanged: (Boolean) -> Unit,
-    private val onPlaylistClicked: (Int, String) -> Unit
+    private val onPlaylistClicked: (Int, String, String) -> Unit
 ) : RecyclerView.Adapter<LibraryAdapter.LibraryViewHolder>() {
 
     private val selectedPlaylists = mutableSetOf<PlaylistInfo>()
@@ -21,6 +24,7 @@ class LibraryAdapter(
     class LibraryViewHolder(view: View) : RecyclerView.ViewHolder(view) {
         val textPlaylistName: TextView = view.findViewById(R.id.textPlaylistName)
         val textSongCount: TextView = view.findViewById(R.id.textSongCount)
+        val imageCover: ImageView = view.findViewById(R.id.imagePlaylistCover)
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): LibraryViewHolder {
@@ -34,6 +38,15 @@ class LibraryAdapter(
         holder.textPlaylistName.text = playlist.name
         holder.textSongCount.text = "${playlist.songCount} songs"
 
+        if (playlist.coverUri.isNotEmpty()) {
+            holder.imageCover.load(Uri.parse(playlist.coverUri)) {
+                crossfade(true)
+                error(android.R.drawable.ic_menu_gallery)
+            }
+        } else {
+            holder.imageCover.setImageResource(android.R.drawable.ic_menu_gallery)
+        }
+
         val isSelected = selectedPlaylists.contains(playlist)
         holder.itemView.setBackgroundColor(if (isSelected) Color.parseColor("#448A65D6") else Color.TRANSPARENT)
 
@@ -41,7 +54,7 @@ class LibraryAdapter(
             if (isSelectionMode) {
                 toggleSelection(playlist)
             } else {
-                onPlaylistClicked(playlist.id, playlist.name)
+                onPlaylistClicked(playlist.id, playlist.name, playlist.coverUri)
             }
         }
 

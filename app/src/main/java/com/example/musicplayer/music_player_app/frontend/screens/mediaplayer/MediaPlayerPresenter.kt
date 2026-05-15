@@ -25,16 +25,41 @@ class MediaPlayerPresenter(
             val duration = musicService.getDuration()
             view?.updateProgress(current, duration)
             view?.setPlayPauseIcon(musicService.isPlaying())
+            
+            // Periodically check if the song changed (e.g. auto-next)
+            val currentSong = musicService.getCurrentSong()
+            if (currentSong != null) {
+                // This will keep the UI in sync if the service changes the song
+                view?.updateSongInfo(currentSong.title, currentSong.artist)
+            }
+            
             handler.postDelayed(this, 1000)
         }
     }
 
     init {
+        // Immediately sync with whatever the service is doing
+        syncWithService()
         handler.post(updateProgressRunnable)
     }
 
+    private fun syncWithService() {
+        val currentSong = musicService.getCurrentSong()
+        if (currentSong != null) {
+            view?.updateSongInfo(currentSong.title, currentSong.artist)
+            view?.setPlayPauseIcon(musicService.isPlaying())
+            view?.updatePlaybackMode(musicService.getPlaybackMode())
+        }
+    }
+
     override fun loadAndPlay(uri: Uri, title: String, artist: String) {
-        musicService.playSong(uri.toString())
+        val song = com.example.musicplayer.music_player_app.frontend.screens.playlist.Song(
+            title = title,
+            artist = artist,
+            fileUri = uri.toString(),
+            playlistId = -1 // Standalone play
+        )
+        musicService.playSong(song)
         view?.updateSongInfo(title, artist)
         view?.setPlayPauseIcon(true)
     }

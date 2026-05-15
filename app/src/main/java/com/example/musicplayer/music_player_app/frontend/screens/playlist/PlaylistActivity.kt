@@ -9,6 +9,7 @@ import android.provider.OpenableColumns
 import android.util.Log
 import android.widget.EditText
 import android.widget.ImageButton
+import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.TextView
 import android.widget.Toast
@@ -17,6 +18,7 @@ import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import coil.load
 import com.example.musicplayer.R
 import com.example.musicplayer.music_player_app.backend.data.AppDatabase
 import com.example.musicplayer.music_player_app.frontend.screens.mediaplayer.MediaPlayerActivity
@@ -27,7 +29,9 @@ class PlaylistActivity : AppCompatActivity(), PlaylistContract.View {
     private lateinit var presenter: PlaylistContract.Presenter
     private lateinit var adapter: PlaylistAdapter
     private lateinit var textPlaylistTitle: TextView
+    private lateinit var imagePlaylistCover: ImageView
     private var currentPlaylistId: Int = -1
+    private var currentCoverUri: String? = null
 
     // --- NEW: Service Connection for inline playback ---
     private var musicService: com.example.musicplayer.music_player_app.backend.service.MusicService? = null
@@ -57,6 +61,16 @@ class PlaylistActivity : AppCompatActivity(), PlaylistContract.View {
         bindService(intent, serviceConnection, Context.BIND_AUTO_CREATE)
     }
 
+    override fun onResume() {
+        super.onResume()
+        if (isBound) {
+            musicService?.let { service ->
+                val currentSong = service.getCurrentSong()
+                adapter.setPlaybackState(currentSong?.id, service.isPlaying())
+            }
+        }
+    }
+
     override fun onStop() {
         super.onStop()
         if (isBound) {
@@ -65,14 +79,29 @@ class PlaylistActivity : AppCompatActivity(), PlaylistContract.View {
         }
     }
 
-    private val pickAudioLauncher = registerForActivityResult(ActivityResultContracts.GetContent()) { uri: Uri? ->
+    private val pickAudioLauncher = registerForActivityResult(ActivityResultContracts.OpenDocument()) { uri: Uri? ->
         uri?.let { 
             try {
-                contentResolver.takePersistableUriPermission(it, Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                // For OpenDocument, we MUST take persistable permission if we want to play it later or from a service
+                val takeFlags: Int = Intent.FLAG_GRANT_READ_URI_PERMISSION
+                contentResolver.takePersistableUriPermission(it, takeFlags)
             } catch (e: Exception) {
                 Log.e("PlaylistActivity", "Failed to take persistable permission", e)
             }
             extractMetadataAndUpload(it) 
+        }
+    }
+
+    private val pickImageLauncher = registerForActivityResult(ActivityResultContracts.OpenDocument()) { uri: Uri? ->
+        uri?.let {
+            try {
+                contentResolver.takePersistableUriPermission(it, Intent.FLAG_GRANT_READ_URI_PERMISSION)
+            } catch (e: Exception) {
+                Log.e("PlaylistActivity", "Failed to take persistable permission for image", e)
+            }
+            currentCoverUri = it.toString()
+            imagePlaylistCover.load(it)
+            presenter.updatePlaylistCover(currentPlaylistId, it.toString())
         }
     }
 
@@ -82,6 +111,7 @@ class PlaylistActivity : AppCompatActivity(), PlaylistContract.View {
 
         currentPlaylistId = intent.getIntExtra("PLAYLIST_ID", -1)
         val currentPlaylistName = intent.getStringExtra("PLAYLIST_NAME") ?: "Unknown Playlist"
+        currentCoverUri = intent.getStringExtra("PLAYLIST_COVER")
 
         if (currentPlaylistId == -1) {
             Toast.makeText(this, "Error loading playlist", Toast.LENGTH_SHORT).show()
@@ -96,12 +126,24 @@ class PlaylistActivity : AppCompatActivity(), PlaylistContract.View {
         val recyclerView = findViewById<RecyclerView>(R.id.recyclerViewPlaylist)
         val fabUpload = findViewById<FloatingActionButton>(R.id.fabUploadSong)
         textPlaylistTitle = findViewById(R.id.textPlaylistTitle)
+        imagePlaylistCover = findViewById(R.id.imagePlaylistCoverHeader)
         val buttonEditPlaylistTitle = findViewById<ImageButton>(R.id.buttonEditPlaylistTitle)
 
         textPlaylistTitle.text = currentPlaylistName
 
+        if (!currentCoverUri.isNullOrEmpty()) {
+            imagePlaylistCover.load(Uri.parse(currentCoverUri))
+        }
+
+        imagePlaylistCover.setOnClickListener {
+            pickImageLauncher.launch(arrayOf("image/*"))
+        }
+
         adapter = PlaylistAdapter(
             onItemClicked = { song ->
+                // Ensure service knows the playlist context before opening the player
+                musicService?.setPlaylist(adapter.currentList, adapter.currentList.indexOf(song))
+
                 // Row click opens the full player screen
                 val intent = Intent(this, MediaPlayerActivity::class.java).apply {
                     putExtra("SONG_TITLE", song.title)
@@ -120,7 +162,9 @@ class PlaylistActivity : AppCompatActivity(), PlaylistContract.View {
                 }
 
                 when (command) {
-                    PlaylistAdapter.PlaybackCommand.PLAY_NEW -> musicService?.playSong(song.fileUri)
+                    PlaylistAdapter.PlaybackCommand.PLAY_NEW -> {
+                        musicService?.setPlaylist(adapter.currentList, adapter.currentList.indexOf(song))
+                    }
                     PlaylistAdapter.PlaybackCommand.RESUME -> musicService?.resumeMusic()
                     PlaylistAdapter.PlaybackCommand.PAUSE -> musicService?.pauseMusic()
                 }
@@ -129,6 +173,7 @@ class PlaylistActivity : AppCompatActivity(), PlaylistContract.View {
                 showEditSongDialog(song)
             },
             onDeleteClicked = { song ->
+                musicService?.onSongDeleted(song.fileUri)
                 presenter.removeSong(song)
             }
         )
@@ -137,7 +182,7 @@ class PlaylistActivity : AppCompatActivity(), PlaylistContract.View {
         recyclerView.adapter = adapter
 
         fabUpload.setOnClickListener {
-            pickAudioLauncher.launch("audio/*")
+            pickAudioLauncher.launch(arrayOf("audio/*"))
         }
 
         buttonEditPlaylistTitle.setOnClickListener {

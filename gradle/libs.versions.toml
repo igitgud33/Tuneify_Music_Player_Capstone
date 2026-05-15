@@ -12,8 +12,10 @@ activity = "1.8.0"
 constraintlayout = "2.1.4"
 runtimeAndroid = "1.11.0"
 material3Android = "1.4.0"
+coil = "2.6.0"
 
 [libraries]
+coil = { group = "io.coil-kt", name = "coil", version.ref = "coil" }
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
 junit = { group = "junit", name = "junit", version.ref = "junit" }
 androidx-junit = { group = "androidx.test.ext", name = "junit", version.ref = "junitVersion" }

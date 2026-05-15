@@ -9,5 +9,6 @@ class CustomApp : Application() {
 
     override fun onCreate() {
         super.onCreate()
+        com.example.musicplayer.music_player_app.backend.data.SessionManager.init(this)
     }
 }

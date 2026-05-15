@@ -27,4 +27,8 @@ class PlaylistModel(
     override suspend fun updatePlaylistName(playlistId: Int, newName: String) {
         playlistDao.updatePlaylistName(playlistId, newName)
     }
+
+    override suspend fun updatePlaylistCover(playlistId: Int, newCoverUri: String) {
+        playlistDao.updatePlaylistCover(playlistId, newCoverUri)
+    }
 }
