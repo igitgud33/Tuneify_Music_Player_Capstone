@@ -1,4 +1,4 @@
-package com.example.musicplayer.music_player_app.frontend.screens.library
+package com.example.musicplayer.music_player_app.backend.data
 
 data class PlaylistInfo(
     val id: Int,

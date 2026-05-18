@@ -10,6 +10,7 @@ import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 import coil.load
 import com.example.musicplayer.R
+import com.example.musicplayer.music_player_app.backend.data.PlaylistInfo
 
 class LibraryAdapter(
     private val playlists: List<PlaylistInfo>,

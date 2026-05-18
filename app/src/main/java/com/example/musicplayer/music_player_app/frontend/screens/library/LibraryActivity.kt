@@ -12,6 +12,7 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.example.musicplayer.R
+import com.example.musicplayer.music_player_app.backend.data.PlaylistInfo
 import com.example.musicplayer.music_player_app.frontend.screens.playlist.PlaylistActivity
 import com.google.android.material.floatingactionbutton.FloatingActionButton
 
